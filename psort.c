@@ -7,10 +7,8 @@
 #include <sys/sysinfo.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+
 char error_message[30] = "An error has occurred\n";
-
-
-
 
 //struct to hold key value pairs from input_file file, (first four bytes are the key)
 struct key_record {
@@ -20,17 +18,17 @@ struct key_record {
 
 //initilize global array to hold key record pairs read from input_file file.
 struct key_record **record_array = NULL;
+int num_procs = 0;
+int record_size = 0;
 
-
-/*
-void merge_array(int left, int mid, int right){
+void merge(int left, int mid, int right){
    
     int i , j , k = 0; 
     int left_size = mid - left + 1;
     int right_size = right - mid;
 
-    key_record *array_left[left_size];
-    key_record *array_right[right_size];
+    struct key_record *array_left[left_size];
+    struct key_record *array_right[right_size];
 
     for (int i = 0; i < left_size; i++)
     {
@@ -41,32 +39,36 @@ void merge_array(int left, int mid, int right){
         array_right[j] = record_array[mid + 1 + j];
     }
 
-
+}
 
 void merge_sort(int left, int right) {
-
-        if (left < right) {
-
-                int mid_point = (left + right) / 2; 
-                merge_sort(left, mid_point); 
-                merge_sort(mid_point + 1, right); 
-                merge_array(left, mid_point, right); // merge
-        }
-
+    if (left < right) {
+        int mid = (left + right) / 2; 
+        merge_sort(left, mid); 
+        merge_sort(mid + 1, right); 
+        merge(left, mid, right);
+    }
 }
-*/
 
-
-
-
-
-
-
-
-
+void* merge_sort_thread(void *arg) {
+    int thread_idx = (int) arg + 1;
+    int thread_size = record_size / num_procs;
+    int bonus = record_size - thread_size * num_procs;
+    int left = thread_idx * thread;
+    int right = (thread_idx + 1) * ;
+    int mid = (left + right) / 2;
+    
+    if (left < right) {
+        merge_sort(left, mid);
+        merge_sort(mid + 1, right);
+        merge_sort(left, mid, right);
+    }
+}
 
 int main(int argc, char *argv[]) {
-   
+    num_procs = get_nprocs();
+
+
     //check if more than 2 arguments
     if (argc != 3) {
         write(STDERR_FILENO, error_message, strlen(error_message));
@@ -113,6 +115,20 @@ int main(int argc, char *argv[]) {
         idx++;
     }
   
+
+
+
+    /* parallel sorting and merge */
+    pthread_t threads[num_procs];
+
+    for (int i = 0; i < num_procs; i++) {
+        pthread_create(&threads[i], NULL, merge_sort_thread, (void *) i);
+    }
+    for (int i = 0; i < num_procs; i++) {
+        pthread_join(threads[i], NULL);
+    }
+    // merge
+    // ...
 
    
     //write the sorted record_array entries to an output_file 
