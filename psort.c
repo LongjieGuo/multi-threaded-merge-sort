@@ -123,9 +123,9 @@ int main(int argc, char *argv[]) {
     
     printf("good, 5\n");
     //initilaize memory for record_array, and its entries
-    record_array = (struct key_record**) calloc(n_records , sizeof(struct key_record));
+    record_array = (struct key_record**) malloc(n_records * sizeof(struct key_record *));
     for (int i = 0; i < n_records ; i++) {
-        record_array[i] = (struct key_record*)malloc(sizeof(struct key_record));
+        record_array[i] = (struct key_record *) malloc(sizeof(struct key_record));
     }
     printf("good, 6 \n");
 
