@@ -13,7 +13,7 @@ char error_message[30] = "An error has occurred\n";
 //struct to hold key value pairs from input_file file, (first four bytes are the key)
 struct key_record {
     int key;
-    int record;
+    int record[24];
 };
 
 //initilize global array to hold key record pairs read from input_file file.
