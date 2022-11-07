@@ -7,19 +7,19 @@
 #include <sys/sysinfo.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-
 char error_message[30] = "An error has occurred\n";
-
 //struct to hold key value pairs from input_file file, (first four bytes are the key)
 struct key_record {
     int key;
     int record[24];
 };
-
 //initilize global array to hold key record pairs read from input_file file.
 struct key_record **record_array = NULL;
+//struct key_record **left_array =NULL;
+//struct key_record **right_array = NULL;  
 int num_procs = 0;
 int n_records = 0;
+
 
 void print_records() {
     for (int i = 0; i < n_records; i++) {
@@ -34,6 +34,15 @@ void merge(int left, int mid, int right){
 
     struct key_record *left_array[left_size];
     struct key_record *right_array[right_size];
+   /* left_array = (struct key_record**) malloc(left_size* sizeof(struct key_record *));
+    right_array= (struct key_record**) malloc(right_size * sizeof(struct key_record *));
+    for (int i = 0; i < left_size; i++) {
+        left_array[i] = (struct key_record *) malloc(sizeof(struct key_record));
+    }
+    for (int i = 0; i < right_size; i++) {
+        right_array[i] = (struct key_record *) malloc(sizeof(struct key_record));
+    }*/
+    
 
     int n_left = mid - left + 1;
     int n_right = right - mid;
@@ -63,6 +72,18 @@ void merge(int left, int mid, int right){
     while (j < n_right) {
         record_array[k++] = right_array[j++];
     }
+
+   /* //free the memory for temp left/right arrays
+    for (int i = 0; i < left_size; i++) {
+        free(left_array[i]); 
+    }
+    free(left_array);
+    //------------------------------------------
+    for (int i = 0; i < right_size; i++) {
+        free(right_array[i]); 
+    }
+    free(right_array);*/
+
 }
 
 void merge_sort(int left, int right) {
@@ -75,7 +96,7 @@ void merge_sort(int left, int right) {
 }
 
 void* merge_sort_thread(void *arg) {
-    int thread_idx = (int) arg;
+    int thread_idx = *(int*) arg;
     int thread_size = n_records / num_procs;
     int bonus = n_records - thread_size * num_procs;
     int left = thread_idx * thread_size;
@@ -93,12 +114,15 @@ void* merge_sort_thread(void *arg) {
         merge_sort(mid + 1, right);
         merge(left, mid, right);
     }
+    return 0;
 }
 
 
 int main(int argc, char *argv[]) {
     num_procs = get_nprocs();
 
+
+    //Start initial checks to validate files__________________________________v
     //check if more than 2 arguments
     if (argc != 3) {
         write(STDERR_FILENO, error_message, strlen(error_message));
@@ -129,10 +153,10 @@ int main(int argc, char *argv[]) {
         write(STDERR_FILENO, error_message, strlen(error_message));  
         exit(0);
     }
+    //END initial checks to validate files__________________________________^
 
 
     n_records = (file_stat.st_size / 100);// records split by 100 bytes
-
     //initilaize memory for record_array, and its entries
     record_array = (struct key_record**) malloc(n_records * sizeof(struct key_record *));
     for (int i = 0; i < n_records ; i++) {
@@ -149,17 +173,13 @@ int main(int argc, char *argv[]) {
         memcpy((void*)&record_array[idx]->key, file_ptr+i, 4);
         //printf("good, 10000, %d \n", i);
         memcpy(record_array[idx]->record, file_ptr+i+4, 96);
-        //printf("good, 20000, %d \n", i);
         idx++;
-        //printf("good, 30000 \n");
     }
 
     //print_records();
-    
     pthread_t threads[num_procs];
-
     for (int i = 0; i < num_procs; i++) {
-        pthread_create(&threads[i], NULL, merge_sort_thread, (void *) i);
+        pthread_create(&threads[i], NULL, merge_sort_thread, (void *) &i);
     }
     for (int i = 0; i < num_procs; i++) {
         pthread_join(threads[i], NULL);
@@ -173,14 +193,12 @@ int main(int argc, char *argv[]) {
         int left = 0;
         int mid = (i + 1) * thread_size - 1;
         int right = (i + 2) * thread_size - 1;
-
         if (i == num_procs - 2) {
             right += bonus;
         }
         //  printf("%d %d %d\n", left, mid, right);        
         merge(left, mid, right);
     }
-    
     //print_records();
 
 
@@ -190,6 +208,8 @@ int main(int argc, char *argv[]) {
         write(output_file, record_array[i], sizeof(struct key_record));
     }
 
+    fsync(output_file); 
+
     //close all open files
     close(input_file);
     close(output_file);
@@ -198,7 +218,5 @@ int main(int argc, char *argv[]) {
         free(record_array[i]); 
     }
     free(record_array);
-
     return 0;
 }
-
