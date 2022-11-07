@@ -22,6 +22,10 @@ struct key_record {
 struct key_record **record_array = NULL;
 int num_procs = 0;
 int n_records = 0;
+
+
+
+// variation on geeks for geeks: https://www.geeksforgeeks.org/merge-sort-using-multi-threading/
 /*
 void merge(int left, int mid, int right){
    
