@@ -13,7 +13,7 @@ char error_message[30] = "An error has occurred\n";
 //struct to hold key value pairs from input_file file, (first four bytes are the key)
 struct key_record {
     int key;
-    char *record;
+    int record;
 };
 
 //initilize global array to hold key record pairs read from input_file file.
@@ -139,7 +139,6 @@ int main(int argc, char *argv[]) {
         // cpy first four bytes for the key, 96 for the record into array. 
         memcpy((void*)&record_array[idx]->key, file_ptr+i,4);
         printf("good, 10000 \n");
-        record_array[idx]->record = malloc(96);
         memcpy(record_array[idx]->record, file_ptr+i+4, 96);
         printf("good, 20000 \n");
         idx++;
