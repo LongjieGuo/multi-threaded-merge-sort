@@ -145,8 +145,6 @@ int main(int argc, char *argv[]) {
     }
 
     
-
-   
     /* parallel sorting and merge 
     pthread_t threads[num_procs];
 
