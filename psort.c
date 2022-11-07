@@ -20,7 +20,6 @@ struct key_record {
 struct key_record **record_array = NULL;
 int num_procs = 0;
 int n_records = 0;
-
 // variation on geeks for geeks: https://www.geeksforgeeks.org/merge-sort-using-multi-threading/
 void merge(int left, int mid, int right){
     int left_size = mid - left + 1;
@@ -36,7 +35,7 @@ void merge(int left, int mid, int right){
         left_array[i] = record_array[left + i];
     }
     for (int i = 0; i < n_right; i++) {
-        right_array[j] = record_array[mid + 1 + i];
+        right_array[i] = record_array[mid + 1 + i];
     }
 
     int k = left;
@@ -70,8 +69,8 @@ void merge_sort(int left, int right) {
 
 void* merge_sort_thread(void *arg) {
     int thread_idx = (int) arg;
-    int thread_size = record_size / num_procs;
-    int bonus = record_size - thread_size * num_procs;
+    int thread_size = n_records / num_procs;
+    int bonus = n_records - thread_size * num_procs;
     int left = thread_idx * thread_size;
     int right = (thread_idx + 1) * thread_size - 1;
 
