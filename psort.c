@@ -21,24 +21,41 @@ struct key_record **record_array = NULL;
 int num_procs = 0;
 int record_size = 0;
 
-void merge(int left, int mid, int right){
-   
-    int i , j , k = 0; 
+void merge(int left, int mid, int right) {
     int left_size = mid - left + 1;
     int right_size = right - mid;
 
-    struct key_record *array_left[left_size];
-    struct key_record *array_right[right_size];
+    struct key_record *left_array[left_size];
+    struct key_record *right_array[right_size];
 
-    for (int i = 0; i < left_size; i++)
-    {
-        array_left[i] = record_array[left + i];
+    int n_left = mid - left + 1;
+    int n_right = right - mid;
+
+    for (int i = 0; i < n_left; i++) {
+        left_array[i] = record_array[left + i];
     }
-    for (int j = 0; j < right_size; j++)
-    {
-        array_right[j] = record_array[mid + 1 + j];
+    for (int i = 0; i < n_right; i++) {
+        right_array[j] = record_array[mid + 1 + i];
     }
 
+    int k = left;
+    int i = 0, j =0;
+
+    while (i < n_left && j < n_right) {
+        if (left_array[i]->key <= right_array[j]->key) {
+            record_array[k++] = left_array[i++];
+        } else {
+            record_array[k++] = right_array[j++];
+        }
+    }
+
+    while (i < n_left) {
+        record_array[k++] = left_array[i++];
+    }
+
+    while (j < n_right) {
+        record_array[k++] = right_array[j++];
+    }
 }
 
 void merge_sort(int left, int right) {
@@ -51,17 +68,23 @@ void merge_sort(int left, int right) {
 }
 
 void* merge_sort_thread(void *arg) {
-    int thread_idx = (int) arg + 1;
+    int thread_idx = (int) arg;
     int thread_size = record_size / num_procs;
     int bonus = record_size - thread_size * num_procs;
-    int left = thread_idx * thread;
-    int right = (thread_idx + 1) * ;
+    int left = thread_idx * thread_size;
+    int right = (thread_idx + 1) * thread_size - 1;
+
+    // put the remaining workload on the last thread, though inefficient!
+    if (bonus > 0 && thread_idx == num_procs - 1) {
+        right += bonus;
+    }
+
     int mid = (left + right) / 2;
     
     if (left < right) {
         merge_sort(left, mid);
         merge_sort(mid + 1, right);
-        merge_sort(left, mid, right);
+        merge(left, mid, right);
     }
 }
 
@@ -114,9 +137,6 @@ int main(int argc, char *argv[]) {
         memcpy(record_array[idx]->record, file_ptr+i+4, 96);
         idx++;
     }
-  
-
-
 
     /* parallel sorting and merge */
     pthread_t threads[num_procs];
@@ -127,9 +147,22 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < num_procs; i++) {
         pthread_join(threads[i], NULL);
     }
+ 
     // merge
-    // ...
+    int thread_idx = 0;
+    int thread_size = record_size / num_procs;
+    int bonus = record_size - thread_size * num_procs;
+ 
+    for (int i = 0; i < num_procs - 1; i++) {
+        int left = 0;
+        int mid = (thread_idx + 1) * thread_size - 1;
+        int right = (thread_idx + 2) * thread_size - 1;
 
+        if (i == num_procs - 2) {
+            right += bonus;
+        }        
+        merge(left, mid, right);
+    }
    
     //write the sorted record_array entries to an output_file 
     for (int i = 0; i < n_records; i++) {
@@ -149,3 +182,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
