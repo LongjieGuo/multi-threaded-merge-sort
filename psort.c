@@ -155,19 +155,19 @@ int main(int argc, char *argv[]) {
     //open output_file
     int output_file = open(argv[2], O_RDWR | O_CREAT | O_TRUNC, 0666);
     if (output_file == -1) {
-        if (write(STDERR_FILENO, error_message, strlen(error_message)) == 1);
+        if (write(STDERR_FILENO, error_message, strlen(error_message)) == -1);
         exit(0);
     }
 
     //find number of records
     struct stat file_stat;
     if (stat(argv[1], &file_stat) < 0) {
-        if (write(STDERR_FILENO, error_message, strlen(error_message)) == 1); 
+        if (write(STDERR_FILENO, error_message, strlen(error_message)) == -1); 
         exit(0);
     }
 
     if (file_stat.st_size == 0) {
-        if (write(STDERR_FILENO, error_message, strlen(error_message)) == 1);  
+        if (write(STDERR_FILENO, error_message, strlen(error_message)) == -1);  
         exit(0);
     }
 
