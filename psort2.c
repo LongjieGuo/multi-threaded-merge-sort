@@ -109,9 +109,9 @@ void *thread_merge_helper(void* args){
 void merge_sections_of_array(int number, int aggregation) {
     pthread_t threads[number/2];
     for(int i = 0; i < number; i = i + 2) {
-        int left = i * ((n_records/thread_size) * aggregation);   //num records/threads 
-        int right = ((i + 2) * (n_records/thread_size) * aggregation) - 1;
-        int middle = left + ((n_records/thread_size) * aggregation) - 1;
+        int left = i * ((thread_size) * aggregation);   //num records/threads 
+        int right = ((i + 2) * (thread_size) * aggregation) - 1;
+        int middle = left + ((thread_size) * aggregation) - 1;
         if (right >= n_records) { 
             right = n_records - 1;
         }
@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
     }
 
     //print_records();
-    
+    thread_size = n_records / num_procs;
     pthread_t threads[num_procs];
 
     for (int i = 0; i < num_procs; i++) {
@@ -206,12 +206,11 @@ int main(int argc, char *argv[]) {
     }
  
     // merge
-    thread_size = n_records / num_procs;
     int bonus = n_records - thread_size * num_procs;
  
     //Intead of this loop, you can do:
-    //merges_sections_of_array(num_procs, 1);
-    for (int i = 0; i < num_procs - 1; i++) {
+    merge_sections_of_array(num_procs, 1);
+    /*for (int i = 0; i < num_procs - 1; i++) {
         int left = 0;
         int mid = (i + 1) * thread_size - 1;
         int right = (i + 2) * thread_size - 1;
@@ -221,8 +220,9 @@ int main(int argc, char *argv[]) {
         }
         //  printf("%d %d %d\n", left, mid, right);        
         merge(left, mid, right);
-    }
+    }*/
     
+
     //print_records();
 
 
